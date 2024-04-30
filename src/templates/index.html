@@ -1,0 +1,149 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Tokenizer Play Ground</title>
+    <style>
+        .highlight-red {
+            color: red;
+        }
+
+        .highlight-green {
+            color: green;
+        }
+
+        .highlight-blue {
+            color: blue;
+        }
+
+        .highlight-purple {
+            color: purple;
+        }
+
+        .highlight-orange {
+            color: orange;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        textarea,
+        .output-box {
+            display: inline-block;
+            text-align: left;
+            width: 800px;
+            height: 300px;
+            font-size: 16px;
+            padding: 10px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            resize: none;
+        }
+
+        .output-box {
+            background-color: #f5f5f5;
+            color: #333;
+            overflow-y: auto;
+        }
+
+        #model-select {
+            font-size: 18px;
+        }
+
+        input[type="submit"] {
+            font-size: 18px;
+            padding: 8px 16px;
+        }
+
+        .character-count {
+            font-size: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Tokenizer Play Ground</h1>
+        <form method="post" id="inputForm">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div style="margin-right: 20px;">
+                    <label for="model-select" style="font-size: 18px;">Select a model:</label>
+                    <select name="model" id="model-select">
+                        {% for key, value in models.items() %}
+                        <option value="{{ key }}" {% if key==default_model %}selected{% endif %}>{{ value }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    {% for key, value in options.items() %}
+                    <input type="radio" id="{{key}}" name="option" value="{{key}}" {% if key==default_option %}checked{%
+                        endif %}>
+                    <label for="{{key}}">{{value}}</label>
+                    {% endfor %}
+                </div>
+            </div>
+            <textarea name="text" id="input-textarea">{{ input_text }}</textarea>
+            <br>
+            <input type="submit" value="Tokenize" style="display: none;">
+        </form>
+        <p class="character-count">Characters: {{ text_length }}&nbsp;&nbsp;&nbsp;&nbsp;Tokens: {{ text_length }}</p>
+        <div class="output-box">{{ highlighted_text|safe }}</div>
+    </div>
+    <script>
+        var inputField = document.getElementById('input-textarea');
+        var modelSelect = document.getElementById('model-select');
+        var optionInputs = document.querySelectorAll('input[name="option"]');
+        var inputForm = document.getElementById('inputForm');
+        var typingTimer; // Timer identifier    
+        var doneTypingInterval = 500; // Time in milliseconds (0.5 seconds)    
+
+        function submitForm() {
+            inputForm.submit(); // Submit the form    
+            setCursorAtEnd(); // Set the cursor at the end of the text after form submission    
+        }
+
+        function setCursorAtEnd() {
+            if (inputField.setSelectionRange) {
+                var len = inputField.value.length;
+                inputField.setSelectionRange(len, len);
+            } else {
+                inputField.value += '';
+            }
+            inputField.focus();
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            setCursorAtEnd();
+        });
+
+        inputField.addEventListener('input', function () {
+            clearTimeout(typingTimer);
+            typingTimer = setTimeout(submitForm, doneTypingInterval);
+        });
+
+        // Event listener for model selection change  
+        modelSelect.addEventListener('change', submitForm);
+
+        // Event listeners for option changes  
+        optionInputs.forEach(function (optionInput) {
+            optionInput.addEventListener('change', submitForm);
+        });
+
+    </script>
+
+</body>
+
+</html>

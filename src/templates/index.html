@@ -6,23 +6,28 @@
     <title>Tokenizer Play Ground</title>
     <style>
         .highlight-red {
-            color: red;
+            background-color: red;
+            color: white;
         }
 
         .highlight-green {
-            color: green;
+            background-color: green;
+            color: white;
         }
 
         .highlight-blue {
-            color: blue;
+            background-color: blue;
+            color: white;
         }
 
         .highlight-purple {
-            color: purple;
+            background-color: purple;
+            color: white;
         }
 
         .highlight-orange {
-            color: orange;
+            background-color: orange;
+            color: white;
         }
 
         body {
@@ -99,7 +104,7 @@
             <br>
             <input type="submit" value="Tokenize" style="display: none;">
         </form>
-        <p class="character-count">Characters: {{ text_length }}&nbsp;&nbsp;&nbsp;&nbsp;Tokens: {{ text_length }}</p>
+        <p class="character-count">Characters: {{ text_length }}&nbsp;&nbsp;&nbsp;&nbsp;Tokens: {{ token_length }}</p>
         <div class="output-box">{{ highlighted_text|safe }}</div>
     </div>
     <script>

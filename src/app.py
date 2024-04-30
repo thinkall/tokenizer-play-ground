@@ -1,10 +1,26 @@
 # app.py (Flask)
+import getpass
+import hashlib
+import os
+import socket
 from uuid import uuid4
 
 from flask import Flask, render_template, request, session
 
+
+def generate_default_secret_key():
+    username = getpass.getuser()
+    hostname = socket.gethostname()
+    ip_address = socket.gethostbyname(hostname)
+    # Concatenate username, IP address, and hostname
+    concatenated_info = f"{username}-{ip_address}-{hostname}"
+    # Hash the concatenated string using SHA-256
+    hashed_info = hashlib.sha256(concatenated_info.encode()).hexdigest()
+    return hashed_info
+
+
 app = Flask(__name__)
-app.secret_key = "your_secret_key"
+app.secret_key = os.getenv("FLASK_SECRET_KEY", generate_default_secret_key())
 
 COLORS = ["red", "green", "blue", "purple", "orange"]
 MODELS = {"vowels": "Highlight vowels", "consonants": "Highlight consonants", "numbers": "Highlight numbers"}

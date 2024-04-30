@@ -5,6 +5,7 @@ import os
 import socket
 from uuid import uuid4
 
+import tiktoken
 from flask import Flask, render_template, request, session
 
 
@@ -23,9 +24,14 @@ app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", generate_default_secret_key())
 
 COLORS = ["red", "green", "blue", "purple", "orange"]
-MODELS = {"vowels": "Highlight vowels", "consonants": "Highlight consonants", "numbers": "Highlight numbers"}
+MODELS = {
+    "cl100k_base": "gpt-4/gpt-3.5/text-embedding-ada-002/davinci-002",
+    "p50k_base": "text-davinci-003/code-davinci-002/code-cushman-002",
+    "gpt2": "gpt-2",
+}
+TIKTOKEN_MODELS = ["cl100k_base", "p50k_base", "gpt2"]
 OPTIONS = {"text": "Text", "tokenids": "TokenIDs"}
-DEFAULT_MODEL = "vowels"
+DEFAULT_MODEL = "cl100k_base"
 DEFAULT_OPTION = "text"
 
 user_data = {}
@@ -41,11 +47,12 @@ def index():
         text = request.form["text"]
         model = request.form.get("model", DEFAULT_MODEL)
         option = request.form.get("option", DEFAULT_OPTION)
-        highlighted_text = process_text(text, model, option)
+        highlighted_text, token_length = process_text(text, model, option)
         text_length = len(text)
         user_data[session["user_id"]] = {
             "highlighted_text": highlighted_text,
             "text_length": text_length,
+            "token_length": token_length,
             "input_text": text,
             "model": model,
             "option": option,
@@ -56,6 +63,7 @@ def index():
     input_text = user_data.get(session["user_id"], {}).get("input_text", "")
     highlighted_text = user_data.get(session["user_id"], {}).get("highlighted_text", "")
     text_length = user_data.get(session["user_id"], {}).get("text_length", 0)
+    token_length = user_data.get(session["user_id"], {}).get("token_length", 0)
     model = user_data.get(session["user_id"], {}).get("model", DEFAULT_MODEL)
     option = user_data.get(session["user_id"], {}).get("option", DEFAULT_OPTION)
 
@@ -68,38 +76,30 @@ def index():
         input_text=input_text,
         highlighted_text=highlighted_text,
         text_length=text_length,
+        token_length=token_length,
     )
 
 
 def process_text(text, model, option):
     highlighted_text = ""
     color_index = 0
-    for i, char in enumerate(text):
-        if char == " " or char == "\n":
-            highlighted_text += char
+    if model in TIKTOKEN_MODELS:
+        enc = tiktoken.get_encoding(model)
+        token_ids = enc.encode(text)
+        if option == "tokenids":
+            return f"{token_ids}", len(token_ids)
         else:
-            if model == "vowels":
-                if char.lower() in "aeiou":
-                    color = COLORS[color_index]
-                    highlighted_text += f'<span class="highlight-{color}">{char}</span>'
-                    color_index = (color_index + 1) % len(COLORS)
+            for token_id in token_ids:
+                text = enc.decode([token_id])
+                if text == "\n":
+                    highlighted_text += text
                 else:
-                    highlighted_text += char
-            elif model == "consonants":
-                if char.lower() not in "aeiou":
                     color = COLORS[color_index]
-                    highlighted_text += f'<span class="highlight-{color}">{char}</span>'
+                    highlighted_text += f'<span class="highlight-{color}">{text}</span>'
                     color_index = (color_index + 1) % len(COLORS)
-                else:
-                    highlighted_text += char
-            elif model == "numbers":
-                if char.isdigit():
-                    color = COLORS[color_index]
-                    highlighted_text += f'<span class="highlight-{color}">{char}</span>'
-                    color_index = (color_index + 1) % len(COLORS)
-                else:
-                    highlighted_text += char
-    return option + highlighted_text
+            return highlighted_text, len(token_ids)
+    else:
+        return text, len(text)
 
 
 if __name__ == "__main__":

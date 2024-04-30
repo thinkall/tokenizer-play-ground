@@ -116,8 +116,11 @@
         var doneTypingInterval = 500; // Time in milliseconds (0.5 seconds)    
 
         function submitForm() {
-            inputForm.submit(); // Submit the form    
-            setCursorAtEnd(); // Set the cursor at the end of the text after form submission    
+            // Check if the input field has text before submitting the form  
+            if (inputField.value.trim().length > 0) {
+                inputForm.submit(); // Submit the form      
+                setCursorAtEnd(); // Set the cursor at the end of the text after form submission      
+            }
         }
 
         function setCursorAtEnd() {

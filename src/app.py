@@ -103,9 +103,13 @@ def process_text(text, model, option):
                     color_index = (color_index + 1) % len(COLORS)
             return highlighted_text, len(token_ids)
     elif model in HUGFACE_MODELS:
-        config = BertConfig.from_pretrained("zhihan1996/DNABERT-2-117M")
-        tokenizer = AutoTokenizer.from_pretrained(MODELS[model], trust_remote_code=True)
-        model = AutoModel.from_pretrained("zhihan1996/DNABERT-2-117M", trust_remote_code=True, config=config)
+        _model = MODELS[model]
+        if _model == "zhihan1996/DNABERT-2-117M":
+            config = BertConfig.from_pretrained(_model)
+        else:
+            config = None
+        tokenizer = AutoTokenizer.from_pretrained(_model, trust_remote_code=True)
+        model = AutoModel.from_pretrained(_model, trust_remote_code=True, config=config)
         inputs = tokenizer(text.upper(), return_tensors="pt")
         if option == "tokenids":
             return f"{inputs['input_ids']}", len(inputs["input_ids"])
